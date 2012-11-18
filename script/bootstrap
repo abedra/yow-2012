@@ -7,7 +7,11 @@ REDIS_VERSION=redis-2.6.4
 if [ ! -d "vendor" ]; then
     mkdir vendor
     pushd vendor
-    wget http://redis.googlecode.com/files/$REDIS_VERSION.tar.gz
+    if which wget > /dev/null; then
+	wget http://redis.googlecode.com/files/$REDIS_VERSION.tar.gz
+    else
+	curl -O http://redis.googlecode.com/files/$REDIS_VERSION.tar.gz
+    fi
     tar xvf $REDIS_VERSION.tar.gz
     pushd $REDIS_VERSION
     make

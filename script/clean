@@ -1,0 +1,5 @@
+#!/bin/sh
+
+rm -rf bin
+rm -rf config
+rm -rf vendor
