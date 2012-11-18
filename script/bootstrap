@@ -1,0 +1,27 @@
+#!/bin/sh
+
+set -e
+
+REDIS_VERSION=redis-2.6.4
+
+if [ ! -d "vendor" ]; then
+    mkdir vendor
+    pushd vendor
+    wget http://redis.googlecode.com/files/$REDIS_VERSION.tar.gz
+    tar xvf $REDIS_VERSION.tar.gz
+    pushd $REDIS_VERSION
+    make
+    popd
+    popd
+fi
+
+if [ ! -d "config" ]; then
+    mkdir config
+    cp vendor/$REDIS_VERSION/redis.conf config/
+fi
+
+if [ ! -d "bin" ]; then
+    mkdir bin
+    cp vendor/$REDIS_VERSION/src/redis-server bin/
+    cp vendor/$REDIS_VERSION/src/redis-cli bin/
+fi

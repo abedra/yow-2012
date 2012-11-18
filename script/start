@@ -1,0 +1,3 @@
+#!/bin/sh
+
+bin/redis-server config/redis.conf
