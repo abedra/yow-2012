@@ -1,0 +1,54 @@
+* Ready, Set, Clojure!
+** Introduction
+*** What are we going to cover?
+**** Some of the Clojure basics
+**** Clojure's built in test framework (clojure.test)
+**** Java interop
+**** Polymorphism
+**** Macros
+**** Contrib libraries
+**** Leiningen
+*** Why Clojure?
+*** Surely a Clojure adapter for Redis already exists!
+**** That's not the point, this is about learning
+** All about Redis
+*** Short explanation
+**** Why it is a great example
+**** Explain the unified protocol
+** Getting Started
+*** A little housekeeping
+**** Bootstrapping the environment
+**** What you will need
+** The protocol
+*** Turning the example from the docs into a test
+*** An introduction to clojure.test
+*** Implementation
+** Hello Redis!
+*** A brief explanation of Java interop in Clojure
+*** Using the Java socket API and the protocol implementation to communicate with Redis
+** Speaking the same language
+*** We can write to Redis, but we aren't able to understand the response yet
+*** Polymorphism in Clojure
+*** An introduction to multimethods
+*** Reading the response
+*** Validating our assumptions with a few more tests
+** A mountain to climb
+*** Exploring the Redis commands
+*** There are 144 commands in Redis 2.6.4
+*** There are only a handful of ideas behind all of them
+*** Do we write and maintain 144 functions?
+*** Hell no, we abstract!
+*** An introduction to macros in Clojure
+*** Defining a language for describing command functions
+*** Writing the macros that pull it all together
+** Keeping track of the commands
+*** How do we keep track of everything?
+*** Programatically extracting all of the commands
+**** https://raw.github.com/antirez/redis-doc/master/commands.json
+*** Writing the commands file
+*** Not all commands created equal
+** Wrapping up
+*** Packaging and distribution
+*** Recap on what we built
+*** Where to go from here
+*** References
