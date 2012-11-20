@@ -18,14 +18,111 @@
 ** Getting Started
 *** A little housekeeping
 **** Bootstrapping the environment
+#+begin_src sh
+  if [ ! -d "vendor" ]; then
+      mkdir vendor
+      pushd vendor
+      if which wget > /dev/null; then
+          wget http://redis.googlecode.com/files/$REDIS_VERSION.tar.gz
+      else
+          curl -O http://redis.googlecode.com/files/$REDIS_VERSION.tar.gz
+      fi
+      tar xvf $REDIS_VERSION.tar.gz
+      pushd $REDIS_VERSION
+      make
+      popd
+      popd
+  fi
+#+end_src
+
+#+begin_src sh
+  if [ ! -d "config" ]; then
+      mkdir config
+      cp vendor/$REDIS_VERSION/redis.conf config/
+  fi
+  
+  if [ ! -d "bin" ]; then
+      mkdir bin
+      cp vendor/$REDIS_VERSION/src/redis-server bin/
+      cp vendor/$REDIS_VERSION/src/redis-cli bin/
+  fi
+#+end_src
 **** What you will need
 ** The protocol
-*** Turning the example from the docs into a test
 *** An introduction to clojure.test
+#+begin_src clojure
+  (defn hello
+    [name]
+    (str "Hello " name "!"))
+  
+  (deftest test-hello
+    (is (= "Hello Yow!" (hello "Yow"))))
+#+end_src
+*** Turning the example from the docs into a test
+#+begin_src clojure
+  (deftest test-command
+    (testing "Produces a well formed command string"
+      (is (= "*3\r\n$3\r\nSET\r\n$5\r\nmykey\r\n$7\r\nmyvalue\r\n"
+             (command "set" "mykey" "myvalue")))))
+#+end_src
 *** Implementation
+#+begin_src clojure
+  (def crlf "\r\n")
+  
+  (defn command
+    [name & args]
+    (str "*"
+         (inc (count args)) crlf
+         "$" (count name) crlf
+         (str/upper-case name) crlf
+         (str/join crlf
+                   (map (fn [x] (str "$" (count x) crlf x)) args))
+         crlf))
+#+end_src
 ** Hello Redis!
 *** A brief explanation of Java interop in Clojure
+#+begin_src clojure
+  user> (import '(java.net Socket))
+  java.net.Socket
+  user> (Socket.)
+  #<Socket Socket[unconnected]>
+  user> (Socket. "localhost" 6379)
+  #<Socket Socket[addr=localhost/127.0.0.1,port=6379,localport=45284]>
+  user> (def s (Socket. "localhost" 6379))
+  #'user/s
+  user> (.setTcpNoDelay s true)
+  nil
+  user> (.setKeepAlive s true)
+  nil
+  user> (.getKeepAlive s)
+  true
+#+end_src
 *** Using the Java socket API and the protocol implementation to communicate with Redis
+#+begin_src clojure
+  (defn- socket
+    []
+    (doto (Socket. "localhost" 6379)
+      (.setTcpNoDelay true)
+      (.setKeepAlive true)))
+#+end_src
+
+#+begin_src clojure
+  (defn request
+    [query]
+    (with-open [socket (doto (socket))
+                in (DataInputStream. (BufferedInputStream. (.getInputStream socket)))
+                out (.getOutputStream socket)]
+      (.write out (.getBytes (apply str query)))
+      (println in)))
+#+end_src
+
+#+begin_src clojure
+  user> (request (command "set" "foo" "bar"))
+  #<DataInputStream java.io.DataInputStream@580a00fd>
+  
+  user> (request (command "get" "foo"))
+  #<DataInputStream java.io.DataInputStream@488e753c>
+#+end_src
 ** Speaking the same language
 *** We can write to Redis, but we aren't able to understand the response yet
 *** Polymorphism in Clojure
