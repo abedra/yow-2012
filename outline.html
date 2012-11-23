@@ -1,0 +1,965 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+               "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<title>outline</title>
+<meta http-equiv="Content-Type" content="text/html;charset=iso-8859-1"/>
+<meta name="title" content="outline"/>
+<meta name="generator" content="Org-mode"/>
+<meta name="generated" content="2012-11-23 16:17:06 CST"/>
+<meta name="author" content="Aaron Bedra"/>
+<meta name="description" content=""/>
+<meta name="keywords" content=""/>
+<style type="text/css">
+ <!--/*--><![CDATA[/*><!--*/
+  html { font-family: Times, serif; font-size: 12pt; }
+  .title  { text-align: center; }
+  .todo   { color: red; }
+  .done   { color: green; }
+  .tag    { background-color: #add8e6; font-weight:normal }
+  .target { }
+  .timestamp { color: #bebebe; }
+  .timestamp-kwd { color: #5f9ea0; }
+  .right  {margin-left:auto; margin-right:0px;  text-align:right;}
+  .left   {margin-left:0px;  margin-right:auto; text-align:left;}
+  .center {margin-left:auto; margin-right:auto; text-align:center;}
+  p.verse { margin-left: 3% }
+  pre {
+	border: 1pt solid #AEBDCC;
+	background-color: #F3F5F7;
+	padding: 5pt;
+	font-family: courier, monospace;
+        font-size: 90%;
+        overflow:auto;
+  }
+  table { border-collapse: collapse; }
+  td, th { vertical-align: top;  }
+  th.right  { text-align:center;  }
+  th.left   { text-align:center;   }
+  th.center { text-align:center; }
+  td.right  { text-align:right;  }
+  td.left   { text-align:left;   }
+  td.center { text-align:center; }
+  dt { font-weight: bold; }
+  div.figure { padding: 0.5em; }
+  div.figure p { text-align: center; }
+  div.inlinetask {
+    padding:10px;
+    border:2px solid gray;
+    margin:10px;
+    background: #ffffcc;
+  }
+  textarea { overflow-x: auto; }
+  .linenr { font-size:smaller }
+  .code-highlighted {background-color:#ffff00;}
+  .org-info-js_info-navigation { border-style:none; }
+  #org-info-js_console-label { font-size:10px; font-weight:bold;
+                               white-space:nowrap; }
+  .org-info-js_search-highlight {background-color:#ffff00; color:#000000;
+                                 font-weight:bold; }
+  /*]]>*/-->
+</style>
+<script type="text/javascript">
+<!--/*--><![CDATA[/*><!--*/
+ function CodeHighlightOn(elem, id)
+ {
+   var target = document.getElementById(id);
+   if(null != target) {
+     elem.cacheClassElem = elem.className;
+     elem.cacheClassTarget = target.className;
+     target.className = "code-highlighted";
+     elem.className   = "code-highlighted";
+   }
+ }
+ function CodeHighlightOff(elem, id)
+ {
+   var target = document.getElementById(id);
+   if(elem.cacheClassElem)
+     elem.className = elem.cacheClassElem;
+   if(elem.cacheClassTarget)
+     target.className = elem.cacheClassTarget;
+ }
+/*]]>*///-->
+</script>
+
+</head>
+<body>
+
+<div id="preamble">
+
+</div>
+
+<div id="content">
+<h1 class="title">outline</h1>
+
+
+<div id="table-of-contents">
+<h2>Table of Contents</h2>
+<div id="text-table-of-contents">
+<ul>
+<li><a href="#sec-1">1 Ready, Set, Clojure!</a>
+<ul>
+<li><a href="#sec-1-1">1.1 Introduction</a>
+<ul>
+<li><a href="#sec-1-1-1">1.1.1 Why Clojure?</a></li>
+<li><a href="#sec-1-1-2">1.1.2 What are we going to cover?</a></li>
+<li><a href="#sec-1-1-3">1.1.3 Surely a Clojure adapter for Redis already exists!</a></li>
+</ul>
+</li>
+<li><a href="#sec-1-2">1.2 Getting Started</a>
+<ul>
+<li><a href="#sec-1-2-1">1.2.1 A little housekeeping</a></li>
+<li><a href="#sec-1-2-2">1.2.2 An introduction to clojure.test</a></li>
+<li><a href="#sec-1-2-3">1.2.3 Turning the example from the docs into a test</a></li>
+<li><a href="#sec-1-2-4">1.2.4 Implementation</a></li>
+</ul>
+</li>
+<li><a href="#sec-1-3">1.3 Hello Redis!</a>
+<ul>
+<li><a href="#sec-1-3-1">1.3.1 A brief explanation of Java interop in Clojure</a></li>
+<li><a href="#sec-1-3-2">1.3.2 Using the Java socket API and the protocol implementation to communicate with Redis</a></li>
+</ul>
+</li>
+<li><a href="#sec-1-4">1.4 Speaking the same language</a>
+<ul>
+<li><a href="#sec-1-4-1">1.4.1 We can write to Redis, but we aren't able to understand the response yet</a></li>
+<li><a href="#sec-1-4-2">1.4.2 Runtime Polymorphism in Clojure</a></li>
+<li><a href="#sec-1-4-3">1.4.3 An introduction to multimethods</a></li>
+<li><a href="#sec-1-4-4">1.4.4 Reading the response</a></li>
+<li><a href="#sec-1-4-5">1.4.5 Validating our assumptions with a few more tests</a></li>
+</ul>
+</li>
+<li><a href="#sec-1-5">1.5 A mountain to climb</a>
+<ul>
+<li><a href="#sec-1-5-1">1.5.1 Exploring the Redis commands</a></li>
+<li><a href="#sec-1-5-2">1.5.2 There are 144 commands in Redis 2.6.4</a></li>
+<li><a href="#sec-1-5-3">1.5.3 There are only a handful of ideas behind all of them</a></li>
+<li><a href="#sec-1-5-4">1.5.4 Do we write and maintain 144 functions?</a></li>
+<li><a href="#sec-1-5-5">1.5.5 An introduction to macros in Clojure</a></li>
+<li><a href="#sec-1-5-6">1.5.6 Defining a language for describing command functions</a></li>
+<li><a href="#sec-1-5-7">1.5.7 Writing the macros that pull it all together</a></li>
+</ul>
+</li>
+<li><a href="#sec-1-6">1.6 Keeping track of the commands</a>
+<ul>
+<li><a href="#sec-1-6-1">1.6.1 How do we keep track of everything?</a></li>
+<li><a href="#sec-1-6-2">1.6.2 Programatically extracting all of the commands</a></li>
+<li><a href="#sec-1-6-3">1.6.3 Writing the commands file</a></li>
+<li><a href="#sec-1-6-4">1.6.4 Not all commands created equal</a></li>
+</ul>
+</li>
+<li><a href="#sec-1-7">1.7 Wrapping up</a>
+<ul>
+<li><a href="#sec-1-7-1">1.7.1 Packaging and distribution</a></li>
+<li><a href="#sec-1-7-2">1.7.2 Recap on what we built</a></li>
+<li><a href="#sec-1-7-3">1.7.3 Where to go from here</a></li>
+<li><a href="#sec-1-7-4">1.7.4 References</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+
+<div id="outline-container-1" class="outline-2">
+<h2 id="sec-1"><span class="section-number-2">1</span> Ready, Set, Clojure!</h2>
+<div class="outline-text-2" id="text-1">
+
+
+</div>
+
+<div id="outline-container-1-1" class="outline-3">
+<h3 id="sec-1-1"><span class="section-number-3">1.1</span> Introduction</h3>
+<div class="outline-text-3" id="text-1-1">
+
+
+</div>
+
+<div id="outline-container-1-1-1" class="outline-4">
+<h4 id="sec-1-1-1"><span class="section-number-4">1.1.1</span> Why Clojure?</h4>
+<div class="outline-text-4" id="text-1-1-1">
+
+</div>
+
+</div>
+
+<div id="outline-container-1-1-2" class="outline-4">
+<h4 id="sec-1-1-2"><span class="section-number-4">1.1.2</span> What are we going to cover?</h4>
+<div class="outline-text-4" id="text-1-1-2">
+
+<ul>
+<li id="sec-1-1-2-1">Some of the Clojure basics<br/>
+</li>
+</ul>
+<ul>
+<li id="sec-1-1-2-2">Clojure's built in test framework (clojure.test)<br/>
+</li>
+</ul>
+<ul>
+<li id="sec-1-1-2-3">Java interop<br/>
+</li>
+</ul>
+<ul>
+<li id="sec-1-1-2-4">Polymorphism<br/>
+</li>
+</ul>
+<ul>
+<li id="sec-1-1-2-5">Macros<br/>
+</li>
+</ul>
+<ul>
+<li id="sec-1-1-2-6">Contrib libraries<br/>
+</li>
+</ul>
+<ul>
+<li id="sec-1-1-2-7">Leiningen<br/>
+</li>
+</ul>
+</div>
+
+</div>
+
+<div id="outline-container-1-1-3" class="outline-4">
+<h4 id="sec-1-1-3"><span class="section-number-4">1.1.3</span> Surely a Clojure adapter for Redis already exists!</h4>
+<div class="outline-text-4" id="text-1-1-3">
+
+<ul>
+<li id="sec-1-1-3-1">List current implementations<br/>
+</li>
+</ul>
+</div>
+</div>
+
+</div>
+
+<div id="outline-container-1-2" class="outline-3">
+<h3 id="sec-1-2"><span class="section-number-3">1.2</span> Getting Started</h3>
+<div class="outline-text-3" id="text-1-2">
+
+
+</div>
+
+<div id="outline-container-1-2-1" class="outline-4">
+<h4 id="sec-1-2-1"><span class="section-number-4">1.2.1</span> A little housekeeping</h4>
+<div class="outline-text-4" id="text-1-2-1">
+
+<ul>
+<li id="sec-1-2-1-1">Bootstrapping the environment<br/>
+
+
+
+<pre class="src src-sh">$ lein new yow
+$ cd yow
+$ mkdir script
+$ touch script/bootstrap
+$ chmod +x script/bootstrap
+</pre>
+
+
+
+<pre class="src src-sh"><span style="color: #a0522d;">REDIS_VERSION</span>=2.6.4
+<span style="color: #a0522d;">URL</span>=http://redis.googlecode.com/files/$<span style="color: #a0522d;">REDIS_VERSION</span>.tar.gz
+
+<span style="color: #a020f0;">if</span> [ ! -d <span style="color: #8b2252;">"vendor"</span> ]; <span style="color: #a020f0;">then</span>
+    mkdir vendor
+    <span style="color: #483d8b;">pushd</span> vendor
+    <span style="color: #a020f0;">if </span><span style="color: #483d8b;">which</span> wget &gt; /dev/null; <span style="color: #a020f0;">then</span>
+        wget $<span style="color: #a0522d;">URL</span>
+    <span style="color: #a020f0;">else</span>
+        curl -O $<span style="color: #a0522d;">URL</span>
+    <span style="color: #a020f0;">fi</span>
+    tar xvf $<span style="color: #a0522d;">REDIS_VERSION</span>.tar.gz
+    <span style="color: #483d8b;">pushd</span> $<span style="color: #a0522d;">REDIS_VERSION</span>
+    make
+    <span style="color: #483d8b;">popd</span>
+    <span style="color: #483d8b;">popd</span>
+<span style="color: #a020f0;">fi</span>
+</pre>
+
+
+
+<pre class="src src-sh"><span style="color: #a020f0;">if</span> [ ! -d <span style="color: #8b2252;">"config"</span> ]; <span style="color: #a020f0;">then</span>
+    mkdir config
+    cp vendor/$<span style="color: #a0522d;">REDIS_VERSION</span>/redis.conf config/
+<span style="color: #a020f0;">fi</span>
+
+<span style="color: #a020f0;">if</span> [ ! -d <span style="color: #8b2252;">"bin"</span> ]; <span style="color: #a020f0;">then</span>
+    mkdir bin
+    cp vendor/$<span style="color: #a0522d;">REDIS_VERSION</span>/src/redis-server bin/
+    cp vendor/$<span style="color: #a0522d;">REDIS_VERSION</span>/src/redis-cli bin/
+<span style="color: #a020f0;">fi</span>
+</pre>
+
+
+
+<pre class="src src-fundamental">$ tree
+|-- README.md
+|-- bin
+|   |-- redis-cli
+|   `-- redis-server
+|-- config
+|   `-- redis.conf
+|-- project.clj
+|-- script
+|   |-- bootstrap
+|-- src
+|   `-- yow
+|       `-- core.clj
+|-- test
+|   `-- yow
+|       `-- core_test.clj
+`-- vendor
+    `-- redis-2.6.4
+</pre>
+
+
+</li>
+</ul>
+<ul>
+<li id="sec-1-2-1-2">What you will need<br/>
+</li>
+</ul>
+<ul>
+<li id="sec-1-2-1-3">Explain the unified protocol<br/>
+</li>
+</ul>
+</div>
+
+</div>
+
+<div id="outline-container-1-2-2" class="outline-4">
+<h4 id="sec-1-2-2"><span class="section-number-4">1.2.2</span> An introduction to clojure.test</h4>
+<div class="outline-text-4" id="text-1-2-2">
+
+
+
+
+<pre class="src src-clojure">(<span style="color: #a020f0;">defn</span> <span style="color: #0000ff;">hello</span>
+  [name]
+  (<span style="color: #a0522d;">str</span> <span style="color: #8b2252;">"Hello "</span> name <span style="color: #8b2252;">"!"</span>))
+
+(<span style="color: #a020f0;">deftest</span> <span style="color: #0000ff;">test-hello</span>
+  (<span style="color: #228b22;">is</span> (<span style="color: #a0522d;">=</span> <span style="color: #8b2252;">"Hello Yow!"</span> (hello <span style="color: #8b2252;">"Yow"</span>))))
+</pre>
+
+</div>
+
+</div>
+
+<div id="outline-container-1-2-3" class="outline-4">
+<h4 id="sec-1-2-3"><span class="section-number-4">1.2.3</span> Turning the example from the docs into a test</h4>
+<div class="outline-text-4" id="text-1-2-3">
+
+
+
+
+<pre class="src src-clojure">(<span style="color: #a020f0;">deftest</span> <span style="color: #0000ff;">test-command</span>
+  (<span style="color: #228b22;">testing</span> <span style="color: #8b2252;">"Produces a well formed command string"</span>
+    (<span style="color: #228b22;">is</span> (<span style="color: #a0522d;">=</span> <span style="color: #8b2252;">"*3\r\n$3\r\nSET\r\n$5\r\nmykey\r\n$7\r\nmyvalue\r\n"</span>
+           (command <span style="color: #8b2252;">"set"</span> <span style="color: #8b2252;">"mykey"</span> <span style="color: #8b2252;">"myvalue"</span>)))))
+</pre>
+
+</div>
+
+</div>
+
+<div id="outline-container-1-2-4" class="outline-4">
+<h4 id="sec-1-2-4"><span class="section-number-4">1.2.4</span> Implementation</h4>
+<div class="outline-text-4" id="text-1-2-4">
+
+
+
+
+<pre class="src src-clojure">(<span style="color: #a020f0;">def</span> <span style="color: #0000ff;">crlf</span> <span style="color: #8b2252;">"\r\n"</span>)
+
+(<span style="color: #a020f0;">defn</span> <span style="color: #0000ff;">command</span>
+  [name &amp; args]
+  (<span style="color: #a0522d;">str</span> <span style="color: #8b2252;">"*"</span>
+       (<span style="color: #a0522d;">inc</span> (<span style="color: #a0522d;">count</span> args)) crlf
+       <span style="color: #8b2252;">"$"</span> (<span style="color: #a0522d;">count</span> name) crlf
+       (str/upper-case name) crlf
+       (str/<span style="color: #228b22;">join</span> crlf
+                 (<span style="color: #a0522d;">map</span> (<span style="color: #a020f0;">fn</span> [x] (<span style="color: #a0522d;">str</span> <span style="color: #8b2252;">"$"</span> (<span style="color: #a0522d;">count</span> x) crlf x)) args))
+       crlf))
+</pre>
+
+
+
+<pre class="src src-fundamental">Testing yow.core-test
+
+Ran 1 tests containing 1 assertions.
+0 failures, 0 errors.
+</pre>
+
+</div>
+</div>
+
+</div>
+
+<div id="outline-container-1-3" class="outline-3">
+<h3 id="sec-1-3"><span class="section-number-3">1.3</span> Hello Redis!</h3>
+<div class="outline-text-3" id="text-1-3">
+
+
+</div>
+
+<div id="outline-container-1-3-1" class="outline-4">
+<h4 id="sec-1-3-1"><span class="section-number-4">1.3.1</span> A brief explanation of Java interop in Clojure</h4>
+<div class="outline-text-4" id="text-1-3-1">
+
+
+
+
+<pre class="src src-clojure">user&gt; (<span style="color: #483d8b;">import</span> '(java.net <span style="color: #483d8b;">Socket</span>))
+<span style="color: #b22222;">;</span><span style="color: #b22222;">-&gt; java.net.Socket</span>
+user&gt; (<span style="color: #483d8b;">Socket.</span>)
+<span style="color: #b22222;">;</span><span style="color: #b22222;">-&gt; #&lt;Socket Socket[unconnected]&gt;</span>
+user&gt; (<span style="color: #483d8b;">Socket.</span> <span style="color: #8b2252;">"localhost"</span> 6379)
+<span style="color: #b22222;">;</span><span style="color: #b22222;">-&gt; #&lt;Socket Socket[addr=localhost/127.0.0.1,port=6379,localport=45284]&gt;</span>
+user&gt; (<span style="color: #a020f0;">def</span> <span style="color: #0000ff;">s</span> (<span style="color: #483d8b;">Socket.</span> <span style="color: #8b2252;">"localhost"</span> 6379))
+<span style="color: #b22222;">;</span><span style="color: #b22222;">-&gt; #'user/s</span>
+user&gt; (<span style="color: #483d8b;">.setKeepAlive</span> s true)
+<span style="color: #b22222;">;</span><span style="color: #b22222;">-&gt; nil</span>
+user&gt; (<span style="color: #483d8b;">.getKeepAlive</span> s)
+<span style="color: #b22222;">;</span><span style="color: #b22222;">-&gt; true</span>
+</pre>
+
+</div>
+
+</div>
+
+<div id="outline-container-1-3-2" class="outline-4">
+<h4 id="sec-1-3-2"><span class="section-number-4">1.3.2</span> Using the Java socket API and the protocol implementation to communicate with Redis</h4>
+<div class="outline-text-4" id="text-1-3-2">
+
+
+
+
+<pre class="src src-clojure">(<span style="color: #a020f0;">defn-</span> <span style="color: #0000ff;">socket</span>
+  []
+  (<span style="color: #483d8b;">doto</span> (<span style="color: #483d8b;">Socket.</span> <span style="color: #8b2252;">"localhost"</span> 6379)
+    (<span style="color: #483d8b;">.setTcpNoDelay</span> true)
+    (<span style="color: #483d8b;">.setKeepAlive</span> true)))
+</pre>
+
+
+
+<pre class="src src-clojure">(<span style="color: #a020f0;">defn</span> <span style="color: #0000ff;">request</span>
+  [query]
+  (<span style="color: #483d8b;">with-open</span> [socket (socket)
+              in (<span style="color: #483d8b;">DataInputStream.</span>
+                  (<span style="color: #483d8b;">BufferedInputStream.</span>
+                   (<span style="color: #483d8b;">.getInputStream</span> socket)))
+              out (<span style="color: #483d8b;">.getOutputStream</span> socket)]
+    (<span style="color: #483d8b;">.write</span> out (<span style="color: #483d8b;">.getBytes</span> (<span style="color: #a0522d;">apply</span> str query)))
+    (<span style="color: #a0522d;">println</span> in)))
+</pre>
+
+
+
+<pre class="src src-clojure">user&gt; (request (command <span style="color: #8b2252;">"set"</span> <span style="color: #8b2252;">"foo"</span> <span style="color: #8b2252;">"bar"</span>))
+<span style="color: #b22222;">;</span><span style="color: #b22222;">-&gt; #&lt;DataInputStream java.io.DataInputStream@580a00fd&gt;</span>
+</pre>
+
+
+
+<pre class="src src-sh">$ bin/redis-cli get foo
+<span style="color: #8b2252;">"bar"</span>
+</pre>
+
+</div>
+</div>
+
+</div>
+
+<div id="outline-container-1-4" class="outline-3">
+<h3 id="sec-1-4"><span class="section-number-3">1.4</span> Speaking the same language</h3>
+<div class="outline-text-3" id="text-1-4">
+
+
+</div>
+
+<div id="outline-container-1-4-1" class="outline-4">
+<h4 id="sec-1-4-1"><span class="section-number-4">1.4.1</span> We can write to Redis, but we aren't able to understand the response yet</h4>
+<div class="outline-text-4" id="text-1-4-1">
+
+</div>
+
+</div>
+
+<div id="outline-container-1-4-2" class="outline-4">
+<h4 id="sec-1-4-2"><span class="section-number-4">1.4.2</span> Runtime Polymorphism in Clojure</h4>
+<div class="outline-text-4" id="text-1-4-2">
+
+<ul>
+<li id="sec-1-4-2-1">3 Levels of Support<br/>
+<ul>
+<li id="sec-1-4-2-1-1">Most of the core datastructures are implemented using Java interfaces<br/>
+</li>
+</ul>
+<ul>
+<li id="sec-1-4-2-1-2">Supports generation of interfaces via proxy<br/>
+</li>
+</ul>
+<ul>
+<li id="sec-1-4-2-1-3">Multimethods (arbitrary dispatch)<br/>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+
+</div>
+
+<div id="outline-container-1-4-3" class="outline-4">
+<h4 id="sec-1-4-3"><span class="section-number-4">1.4.3</span> An introduction to multimethods</h4>
+<div class="outline-text-4" id="text-1-4-3">
+
+
+
+
+<pre class="src src-clojure">(<span style="color: #a020f0;">defmulti</span> <span style="color: #0000ff;">encounter</span>
+  (<span style="color: #a020f0;">fn</span> [x y]
+    [(<span style="color: #008b8b;">:Species</span> x) (<span style="color: #008b8b;">:Species</span> y)]))
+
+(<span style="color: #a020f0;">defmethod</span> <span style="color: #0000ff;">encounter</span> [<span style="color: #008b8b;">:Bunny</span> <span style="color: #008b8b;">:Lion</span>] [b l]  <span style="color: #008b8b;">:run-away</span>)
+(<span style="color: #a020f0;">defmethod</span> <span style="color: #0000ff;">encounter</span> [<span style="color: #008b8b;">:Lion</span> <span style="color: #008b8b;">:Bunny</span>] [b l]  <span style="color: #008b8b;">:eat</span>)
+(<span style="color: #a020f0;">defmethod</span> <span style="color: #0000ff;">encounter</span> [<span style="color: #008b8b;">:Lion</span> <span style="color: #008b8b;">:Lion</span>] [b l]   <span style="color: #008b8b;">:fight</span>)
+(<span style="color: #a020f0;">defmethod</span> <span style="color: #0000ff;">encounter</span> [<span style="color: #008b8b;">:Bunny</span> <span style="color: #008b8b;">:Bunny</span>] [b l] <span style="color: #008b8b;">:mate</span>)
+</pre>
+
+
+
+<pre class="src src-clojure">(<span style="color: #a020f0;">def</span> <span style="color: #0000ff;">b1</span> {<span style="color: #008b8b;">:Species</span> <span style="color: #008b8b;">:Bunny</span> <span style="color: #008b8b;">:other</span> <span style="color: #008b8b;">:stuff</span>})
+(<span style="color: #a020f0;">def</span> <span style="color: #0000ff;">b2</span> {<span style="color: #008b8b;">:Species</span> <span style="color: #008b8b;">:Bunny</span> <span style="color: #008b8b;">:other</span> <span style="color: #008b8b;">:stuff</span>})
+(<span style="color: #a020f0;">def</span> <span style="color: #0000ff;">l1</span> {<span style="color: #008b8b;">:Species</span> <span style="color: #008b8b;">:Lion</span> <span style="color: #008b8b;">:other</span> <span style="color: #008b8b;">:stuff</span>})
+(<span style="color: #a020f0;">def</span> <span style="color: #0000ff;">l2</span> {<span style="color: #008b8b;">:Species</span> <span style="color: #008b8b;">:Lion</span> <span style="color: #008b8b;">:other</span> <span style="color: #008b8b;">:stuff</span>})
+
+(encounter b1 b2)
+<span style="color: #b22222;">;</span><span style="color: #b22222;">-&gt; :mate</span>
+(encounter b1 l1)
+<span style="color: #b22222;">;</span><span style="color: #b22222;">-&gt; :run-away</span>
+(encounter l1 b1)
+<span style="color: #b22222;">;</span><span style="color: #b22222;">-&gt; :eat</span>
+(encounter l1 l2)
+<span style="color: #b22222;">;</span><span style="color: #b22222;">-&gt; :fight</span>
+</pre>
+
+</div>
+
+</div>
+
+<div id="outline-container-1-4-4" class="outline-4">
+<h4 id="sec-1-4-4"><span class="section-number-4">1.4.4</span> Reading the response</h4>
+<div class="outline-text-4" id="text-1-4-4">
+
+<ul>
+<li id="sec-1-4-4-1">The Rules<br/>
+
+
+
+<pre class="src src-fundamental">Redis will reply to commands with different kinds of replies. It is
+possible to check the kind of reply from the first byte sent by the
+server:
+
+With a single line reply the first byte of the reply will be <span style="color: #8b2252;">"+"</span>
+With an error message the first byte of the reply will be    <span style="color: #8b2252;">"-"</span>
+With an integer number the first byte of the reply will be   <span style="color: #8b2252;">":"</span>
+With bulk reply the first byte of the reply will be          <span style="color: #8b2252;">"$"</span>
+With multi-bulk reply the first byte of the reply will be    <span style="color: #8b2252;">"*"</span>
+</pre>
+
+</li>
+</ul>
+<ul>
+<li id="sec-1-4-4-2">Defining our response multimethod<br/>
+
+
+
+<pre class="src src-clojure">(<span style="color: #a020f0;">defmulti</span> <span style="color: #0000ff;">response</span>
+  (<span style="color: #a020f0;">fn</span> [in] (<span style="color: #a0522d;">char</span> (<span style="color: #483d8b;">.readByte</span> in))))
+
+(<span style="color: #a020f0;">defmethod</span> <span style="color: #0000ff;">response</span> \- [in]
+  (<span style="color: #483d8b;">.readLine</span> in))
+
+(<span style="color: #a020f0;">defmethod</span> <span style="color: #0000ff;">response</span> \+ [in]
+  (<span style="color: #483d8b;">.readLine</span> in))
+
+(<span style="color: #a020f0;">defmethod</span> <span style="color: #0000ff;">response</span> \: [in]
+  (<span style="color: #483d8b;">Long/parseLong</span> (<span style="color: #483d8b;">.readLine</span> in)))
+
+(<span style="color: #a020f0;">defmethod</span> <span style="color: #0000ff;">response</span> \$ [in]
+  (<span style="color: #483d8b;">.readLine</span> in)
+  (<span style="color: #483d8b;">.readLine</span> in))
+
+(<span style="color: #a020f0;">defmethod</span> <span style="color: #0000ff;">response</span> \* [in]
+  (<span style="color: #483d8b;">throw</span> (<span style="color: #483d8b;">UnsupportedOperationException.</span> <span style="color: #8b2252;">"Not Yet Implemented"</span>)))
+</pre>
+
+
+
+<pre class="src src-clojure">user&gt; (request (command <span style="color: #8b2252;">"set"</span> <span style="color: #8b2252;">"foo"</span> <span style="color: #8b2252;">"bar"</span>))
+<span style="color: #b22222;">;</span><span style="color: #b22222;">-&gt; "OK"</span>
+
+user&gt; (request (command <span style="color: #8b2252;">"get"</span> <span style="color: #8b2252;">"foo"</span>))
+<span style="color: #b22222;">;</span><span style="color: #b22222;">-&gt; "bar"</span>
+</pre>
+
+</li>
+</ul>
+</div>
+
+</div>
+
+<div id="outline-container-1-4-5" class="outline-4">
+<h4 id="sec-1-4-5"><span class="section-number-4">1.4.5</span> Validating our assumptions with a few more tests</h4>
+<div class="outline-text-4" id="text-1-4-5">
+
+
+
+
+<pre class="src src-clojure"><span style="color: #b22222;">;; </span><span style="color: #b22222;">Examples taken from http://try.redis-db.com/</span>
+(<span style="color: #a020f0;">deftest</span> <span style="color: #0000ff;">test-basic-interaction</span>
+  (<span style="color: #228b22;">testing</span> <span style="color: #8b2252;">"SET then GET"</span>
+    (<span style="color: #228b22;">is</span> (<span style="color: #a0522d;">=</span> <span style="color: #8b2252;">"OK"</span> (request (command <span style="color: #8b2252;">"set"</span> <span style="color: #8b2252;">"server:name"</span> <span style="color: #8b2252;">"fido"</span>))))
+    (<span style="color: #228b22;">is</span> (<span style="color: #a0522d;">=</span> <span style="color: #8b2252;">"fido"</span> (request (command <span style="color: #8b2252;">"get"</span> <span style="color: #8b2252;">"server:name"</span>)))))
+  (<span style="color: #228b22;">testing</span> <span style="color: #8b2252;">"INCR"</span>
+    (request (command <span style="color: #8b2252;">"set"</span> <span style="color: #8b2252;">"connections"</span> <span style="color: #8b2252;">"10"</span>))
+    (<span style="color: #228b22;">is</span> (<span style="color: #a0522d;">=</span> 11 (request (command <span style="color: #8b2252;">"incr"</span> <span style="color: #8b2252;">"connections"</span>)))))
+  (<span style="color: #228b22;">testing</span> <span style="color: #8b2252;">"DEL"</span>
+    (<span style="color: #228b22;">is</span> (<span style="color: #a0522d;">=</span> 1 (request (command <span style="color: #8b2252;">"del"</span> <span style="color: #8b2252;">"connections"</span>))))))
+</pre>
+
+
+
+<pre class="src src-fundamental">Testing yow.core-test
+
+Ran 2 tests containing 5 assertions.
+0 failures, 0 errors.
+</pre>
+
+
+</div>
+</div>
+
+</div>
+
+<div id="outline-container-1-5" class="outline-3">
+<h3 id="sec-1-5"><span class="section-number-3">1.5</span> A mountain to climb</h3>
+<div class="outline-text-3" id="text-1-5">
+
+
+</div>
+
+<div id="outline-container-1-5-1" class="outline-4">
+<h4 id="sec-1-5-1"><span class="section-number-4">1.5.1</span> Exploring the Redis commands</h4>
+<div class="outline-text-4" id="text-1-5-1">
+
+
+
+
+<pre class="src src-clojure">(<span style="color: #483d8b;">ns</span> yow.commands
+  (<span style="color: #008b8b;">:use</span> [clojure.data.json <span style="color: #008b8b;">:only</span> (read-str)]))
+
+(<span style="color: #a020f0;">defn</span> <span style="color: #0000ff;">fetch-redis-commands</span>
+  []
+  (<span style="color: #a0522d;">map</span> first
+   (read-str
+    (<span style="color: #a0522d;">slurp</span> <span style="color: #8b2252;">"https://raw.github.com/antirez/redis-doc/master/commands.json"</span>))))
+</pre>
+
+
+
+<pre class="src src-fundamental">ZREM ZREMRANGEBYRANK PUNSUBSCRIBE BRPOP BITCOUNT SET PEXPIREAT FLUSHDB
+BGSAVE ZRANGE SLOWLOG SCARD HDEL HSETNX STRLEN CONFIG SET HEXISTS
+SMOVE SUNIONSTORE ZINCRBY CONFIG RESETSTAT LINSERT BRPOPLPUSH ECHO
+PSETEX LPOP SMEMBERS LPUSH ZRANK LINDEX RPOPLPUSH DECRBY
+ZREVRANGEBYSCORE BLPOP ZADD SREM GETRANGE RENAMENX AUTH HINCRBYFLOAT
+SINTER SDIFFSTORE LLEN MGET SUBSCRIBE ZCARD SETBIT MIGRATE INCRBY DEL
+GETSET SETNX DEBUG OBJECT TTL RPUSH ZUNIONSTORE RPUSHX HLEN TIME LREM
+INFO SLAVEOF HGET RESTORE LTRIM SADD BITOP WATCH PUBLISH PEXPIRE QUIT
+SCRIPT FLUSH DECR EVALSHA HMGET LRANGE EXEC SCRIPT EXISTS INCRBYFLOAT
+UNSUBSCRIBE BGREWRITEAOF MOVE PING EXPIREAT SRANDMEMBER LPUSHX HGETALL
+LASTSAVE SCRIPT KILL HINCRBY CLIENT KILL CLIENT LIST INCR ZREVRANGE
+PERSIST KEYS DUMP SETEX ZCOUNT MSET ZREVRANK LSET UNWATCH SHUTDOWN GET
+SISMEMBER GETBIT CONFIG GET SINTERSTORE ZRANGEBYSCORE ZSCORE SDIFF
+MULTI MONITOR HVALS DEBUG SEGFAULT PSUBSCRIBE HSET APPEND TYPE
+SETRANGE SYNC SCRIPT LOAD EXISTS EVAL SELECT SUNION HKEYS RANDOMKEY
+PTTL FLUSHALL HMSET SAVE DISCARD SPOP SORT ZREMRANGEBYSCORE RENAME
+RPOP EXPIRE ZINTERSTORE MSETNX DBSIZE OBJECT
+</pre>
+
+</div>
+
+</div>
+
+<div id="outline-container-1-5-2" class="outline-4">
+<h4 id="sec-1-5-2"><span class="section-number-4">1.5.2</span> There are 144 commands in Redis 2.6.4</h4>
+<div class="outline-text-4" id="text-1-5-2">
+
+
+
+
+<pre class="src src-clojure">user&gt; (<span style="color: #a0522d;">count</span> (fetch-redis-commands))
+<span style="color: #b22222;">;</span><span style="color: #b22222;">-&gt; 144</span>
+</pre>
+
+</div>
+
+</div>
+
+<div id="outline-container-1-5-3" class="outline-4">
+<h4 id="sec-1-5-3"><span class="section-number-4">1.5.3</span> There are only a handful of ideas behind all of them</h4>
+<div class="outline-text-4" id="text-1-5-3">
+
+
+
+
+<pre class="src src-javascript"><span style="color: #8b2252;">"BITOP"</span>: {
+    <span style="color: #8b2252;">"summary"</span>: <span style="color: #8b2252;">"Perform bitwise operations between strings"</span>,
+    <span style="color: #8b2252;">"complexity"</span>: <span style="color: #8b2252;">"O(N)"</span>,
+    <span style="color: #8b2252;">"arguments"</span>: [
+        {
+            <span style="color: #8b2252;">"name"</span>: <span style="color: #8b2252;">"operation"</span>,
+            <span style="color: #8b2252;">"type"</span>: <span style="color: #8b2252;">"string"</span>
+        },
+        {
+            <span style="color: #8b2252;">"name"</span>: <span style="color: #8b2252;">"destkey"</span>,
+            <span style="color: #8b2252;">"type"</span>: <span style="color: #8b2252;">"key"</span>
+        },
+        {
+            <span style="color: #8b2252;">"name"</span>: <span style="color: #8b2252;">"key"</span>,
+            <span style="color: #8b2252;">"type"</span>: <span style="color: #8b2252;">"key"</span>,
+            <span style="color: #8b2252;">"multiple"</span>: <span style="color: #008b8b;">true</span>
+        }
+    ],
+    <span style="color: #8b2252;">"since"</span>: <span style="color: #8b2252;">"2.6.0"</span>,
+    <span style="color: #8b2252;">"group"</span>: <span style="color: #8b2252;">"string"</span>
+},
+</pre>
+
+</div>
+
+</div>
+
+<div id="outline-container-1-5-4" class="outline-4">
+<h4 id="sec-1-5-4"><span class="section-number-4">1.5.4</span> Do we write and maintain 144 functions?</h4>
+<div class="outline-text-4" id="text-1-5-4">
+
+<ul>
+<li id="sec-1-5-4-1">Hell no, we abstract!<br/>
+</li>
+</ul>
+</div>
+
+</div>
+
+<div id="outline-container-1-5-5" class="outline-4">
+<h4 id="sec-1-5-5"><span class="section-number-4">1.5.5</span> An introduction to macros in Clojure</h4>
+<div class="outline-text-4" id="text-1-5-5">
+
+<ul>
+<li id="sec-1-5-5-1">The first rule of macro club<br/>
+
+
+
+<pre class="src src-clojure"><span style="color: #b22222;">;; </span><span style="color: #b22222;">source http://clojuredocs.org/clojure_core/clojure.core/defmacro</span>
+(<span style="color: #a020f0;">defmacro</span> <span style="color: #0000ff;">unless</span> [pred a b]
+  `(<span style="color: #483d8b;">if</span> (<span style="color: #a0522d;">not</span> ~pred) ~a ~b))
+
+<span style="color: #b22222;">;; </span><span style="color: #b22222;">usage:</span>
+
+(unless false (<span style="color: #a0522d;">println</span> <span style="color: #8b2252;">"Will print"</span>) (<span style="color: #a0522d;">println</span> <span style="color: #8b2252;">"Will not print"</span>))
+</pre>
+
+
+
+<pre class="src src-clojure">user&gt; (<span style="color: #a0522d;">macroexpand-1</span> '(unless false (<span style="color: #a0522d;">println</span> <span style="color: #8b2252;">"Will print"</span>) (<span style="color: #a0522d;">println</span> <span style="color: #8b2252;">"Will not print"</span>)))
+<span style="color: #b22222;">;; </span><span style="color: #b22222;">(if (clojure.core/not false)</span>
+<span style="color: #b22222;">;;   </span><span style="color: #b22222;">(println "Will print")</span>
+<span style="color: #b22222;">;;   </span><span style="color: #b22222;">(println "Will not print"))</span>
+</pre>
+
+</li>
+</ul>
+</div>
+
+</div>
+
+<div id="outline-container-1-5-6" class="outline-4">
+<h4 id="sec-1-5-6"><span class="section-number-4">1.5.6</span> Defining a language for describing command functions</h4>
+<div class="outline-text-4" id="text-1-5-6">
+
+
+
+
+<pre class="src src-clojure">(<span style="color: #a020f0;">defcommands</span>
+  (<span style="color: #a0522d;">set</span>  [key value])
+  (<span style="color: #a0522d;">get</span>  [key])
+  (incr [key])
+  (del  [key &amp; keys]))
+</pre>
+
+</div>
+
+</div>
+
+<div id="outline-container-1-5-7" class="outline-4">
+<h4 id="sec-1-5-7"><span class="section-number-4">1.5.7</span> Writing the macros that pull it all together</h4>
+<div class="outline-text-4" id="text-1-5-7">
+
+
+
+
+<pre class="src src-clojure">(<span style="color: #a020f0;">defn</span> <span style="color: #0000ff;">parameters</span>
+  [params]
+  (<span style="color: #483d8b;">let</span> [[args varargs] (<span style="color: #a0522d;">split-with</span> #(<span style="color: #a0522d;">not=</span> '&amp; %)  params)]
+    (<span style="color: #a0522d;">conj</span> (<span style="color: #a0522d;">vec</span> args) (<span style="color: #a0522d;">last</span> varargs))))
+
+(<span style="color: #a020f0;">defmacro</span> <span style="color: #0000ff;">defcommand</span>
+  [name params]
+  (<span style="color: #483d8b;">let</span> [com (<span style="color: #a0522d;">str</span> name)
+        p (parameters params)]
+    `(<span style="color: #a020f0;">defn</span> <span style="color: #0000ff;">~name</span> ~params
+       (<span style="color: #a0522d;">apply</span> command ~com ~@p))))
+</pre>
+
+
+
+<pre class="src src-clojure">user&gt; (<span style="color: #a0522d;">macroexpand-1</span> '(<span style="color: #a020f0;">defcommand</span> <span style="color: #0000ff;">set</span> [key value]))
+<span style="color: #b22222;">;; </span><span style="color: #b22222;">(clojure.core/defn set</span>
+<span style="color: #b22222;">;;   </span><span style="color: #b22222;">[key value]</span>
+<span style="color: #b22222;">;;   </span><span style="color: #b22222;">(clojure.core/apply</span>
+<span style="color: #b22222;">;;    </span><span style="color: #b22222;">yow.core/command "set" key value nil))</span>
+
+user&gt; (<span style="color: #a0522d;">macroexpand-1</span> '(<span style="color: #a020f0;">defcommand</span> <span style="color: #0000ff;">del</span> [key &amp; keys]))
+<span style="color: #b22222;">;; </span><span style="color: #b22222;">(clojure.core/defn del</span>
+<span style="color: #b22222;">;;   </span><span style="color: #b22222;">[key &amp; keys]</span>
+<span style="color: #b22222;">;;   </span><span style="color: #b22222;">(clojure.core/apply</span>
+<span style="color: #b22222;">;;    </span><span style="color: #b22222;">yow.core/command "del" key keys))</span>
+</pre>
+
+
+
+<pre class="src src-clojure">(<span style="color: #a020f0;">defmacro</span> <span style="color: #0000ff;">defqueries</span>
+  [&amp; queries]
+  `(<span style="color: #483d8b;">do</span> ~@(<span style="color: #a0522d;">map</span> (<span style="color: #a020f0;">fn</span> [q] `(<span style="color: #a020f0;">defquery</span> <span style="color: #0000ff;">~@q</span>)) queries)))
+
+user&gt; (<span style="color: #a0522d;">macroexpand-1</span>
+       '(<span style="color: #a020f0;">defcommands</span> (<span style="color: #a0522d;">set</span> [set value]) (del [key &amp; keys])))
+<span style="color: #b22222;">;; </span><span style="color: #b22222;">(do</span>
+<span style="color: #b22222;">;;   </span><span style="color: #b22222;">(yow.core/defcommand set [set value])</span>
+<span style="color: #b22222;">;;   </span><span style="color: #b22222;">(yow.core/defcommand del [key &amp; keys]))</span>
+user&gt; (clojure.walk/<span style="color: #228b22;">macroexpand-all</span>
+       '(<span style="color: #a020f0;">defcommands</span> (<span style="color: #a0522d;">set</span> [set value]) (del [key &amp; keys])))
+<span style="color: #b22222;">;; </span><span style="color: #b22222;">(do</span>
+<span style="color: #b22222;">;;   </span><span style="color: #b22222;">(def set</span>
+<span style="color: #b22222;">;;     </span><span style="color: #b22222;">(fn* ([set value]</span>
+<span style="color: #b22222;">;;             </span><span style="color: #b22222;">(clojure.core/apply yow.core/command "set" set value nil))))</span>
+<span style="color: #b22222;">;;   </span><span style="color: #b22222;">(def del</span>
+<span style="color: #b22222;">;;     </span><span style="color: #b22222;">(fn* ([key &amp; keys]</span>
+<span style="color: #b22222;">;;             </span><span style="color: #b22222;">(clojure.core/apply yow.core/command "del" key keys)))))</span>
+</pre>
+
+</div>
+</div>
+
+</div>
+
+<div id="outline-container-1-6" class="outline-3">
+<h3 id="sec-1-6"><span class="section-number-3">1.6</span> Keeping track of the commands</h3>
+<div class="outline-text-3" id="text-1-6">
+
+
+</div>
+
+<div id="outline-container-1-6-1" class="outline-4">
+<h4 id="sec-1-6-1"><span class="section-number-4">1.6.1</span> How do we keep track of everything?</h4>
+<div class="outline-text-4" id="text-1-6-1">
+
+</div>
+
+</div>
+
+<div id="outline-container-1-6-2" class="outline-4">
+<h4 id="sec-1-6-2"><span class="section-number-4">1.6.2</span> Programatically extracting all of the commands</h4>
+<div class="outline-text-4" id="text-1-6-2">
+
+<ul>
+<li id="sec-1-6-2-1"><a href="https://raw.github.com/antirez/redis-doc/master/commands.json">https://raw.github.com/antirez/redis-doc/master/commands.json</a><br/>
+
+</li>
+</ul>
+</div>
+
+</div>
+
+<div id="outline-container-1-6-3" class="outline-4">
+<h4 id="sec-1-6-3"><span class="section-number-4">1.6.3</span> Writing the commands file</h4>
+<div class="outline-text-4" id="text-1-6-3">
+
+</div>
+
+</div>
+
+<div id="outline-container-1-6-4" class="outline-4">
+<h4 id="sec-1-6-4"><span class="section-number-4">1.6.4</span> Not all commands created equal</h4>
+<div class="outline-text-4" id="text-1-6-4">
+
+</div>
+</div>
+
+</div>
+
+<div id="outline-container-1-7" class="outline-3">
+<h3 id="sec-1-7"><span class="section-number-3">1.7</span> Wrapping up</h3>
+<div class="outline-text-3" id="text-1-7">
+
+
+</div>
+
+<div id="outline-container-1-7-1" class="outline-4">
+<h4 id="sec-1-7-1"><span class="section-number-4">1.7.1</span> Packaging and distribution</h4>
+<div class="outline-text-4" id="text-1-7-1">
+
+</div>
+
+</div>
+
+<div id="outline-container-1-7-2" class="outline-4">
+<h4 id="sec-1-7-2"><span class="section-number-4">1.7.2</span> Recap on what we built</h4>
+<div class="outline-text-4" id="text-1-7-2">
+
+</div>
+
+</div>
+
+<div id="outline-container-1-7-3" class="outline-4">
+<h4 id="sec-1-7-3"><span class="section-number-4">1.7.3</span> Where to go from here</h4>
+<div class="outline-text-4" id="text-1-7-3">
+
+</div>
+
+</div>
+
+<div id="outline-container-1-7-4" class="outline-4">
+<h4 id="sec-1-7-4"><span class="section-number-4">1.7.4</span> References</h4>
+<div class="outline-text-4" id="text-1-7-4">
+
+</div>
+</div>
+</div>
+</div>
+</div>
+
+<div id="postamble">
+<p class="date">Date: 2012-11-23 16:17:06 CST</p>
+<p class="author">Author: Aaron Bedra</p>
+<p class="creator">Org version 7.8.11 with Emacs version 24</p>
+<a href="http://validator.w3.org/check?uri=referer">Validate XHTML 1.0</a>
+
+</div>
+</body>
+</html>

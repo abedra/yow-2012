@@ -1,5 +1,6 @@
 * Ready, Set, Clojure!
 ** Introduction
+*** Why Clojure?
 *** What are we going to cover?
 **** Some of the Clojure basics
 **** Clojure's built in test framework (clojure.test)
@@ -8,24 +9,30 @@
 **** Macros
 **** Contrib libraries
 **** Leiningen
-*** Why Clojure?
 *** Surely a Clojure adapter for Redis already exists!
-**** That's not the point, this is about learning
-** All about Redis
-*** Short explanation
-**** Why it is a great example
-**** Explain the unified protocol
+**** List current implementations
 ** Getting Started
 *** A little housekeeping
 **** Bootstrapping the environment
 #+begin_src sh
+  $ lein new yow
+  $ cd yow
+  $ mkdir script
+  $ touch script/bootstrap
+  $ chmod +x script/bootstrap
+#+end_src
+
+#+begin_src sh
+  REDIS_VERSION=2.6.4
+  URL=http://redis.googlecode.com/files/$REDIS_VERSION.tar.gz
+  
   if [ ! -d "vendor" ]; then
       mkdir vendor
       pushd vendor
       if which wget > /dev/null; then
-          wget http://redis.googlecode.com/files/$REDIS_VERSION.tar.gz
+          wget $URL
       else
-          curl -O http://redis.googlecode.com/files/$REDIS_VERSION.tar.gz
+          curl -O $URL
       fi
       tar xvf $REDIS_VERSION.tar.gz
       pushd $REDIS_VERSION
@@ -47,8 +54,30 @@
       cp vendor/$REDIS_VERSION/src/redis-cli bin/
   fi
 #+end_src
+
+#+begin_src fundamental
+  $ tree
+  |-- README.md
+  |-- bin
+  |   |-- redis-cli
+  |   `-- redis-server
+  |-- config
+  |   `-- redis.conf
+  |-- project.clj
+  |-- script
+  |   |-- bootstrap
+  |-- src
+  |   `-- yow
+  |       `-- core.clj
+  |-- test
+  |   `-- yow
+  |       `-- core_test.clj
+  `-- vendor
+      `-- redis-2.6.4
+#+end_src
+
 **** What you will need
-** The protocol
+**** Explain the unified protocol
 *** An introduction to clojure.test
 #+begin_src clojure
   (defn hello
@@ -79,23 +108,28 @@
                    (map (fn [x] (str "$" (count x) crlf x)) args))
          crlf))
 #+end_src
+
+#+begin_src fundamental
+  Testing yow.core-test
+  
+  Ran 1 tests containing 1 assertions.
+  0 failures, 0 errors.
+#+end_src
 ** Hello Redis!
 *** A brief explanation of Java interop in Clojure
 #+begin_src clojure
   user> (import '(java.net Socket))
-  java.net.Socket
+  ;-> java.net.Socket
   user> (Socket.)
-  #<Socket Socket[unconnected]>
+  ;-> #<Socket Socket[unconnected]>
   user> (Socket. "localhost" 6379)
-  #<Socket Socket[addr=localhost/127.0.0.1,port=6379,localport=45284]>
+  ;-> #<Socket Socket[addr=localhost/127.0.0.1,port=6379,localport=45284]>
   user> (def s (Socket. "localhost" 6379))
-  #'user/s
-  user> (.setTcpNoDelay s true)
-  nil
+  ;-> #'user/s
   user> (.setKeepAlive s true)
-  nil
+  ;-> nil
   user> (.getKeepAlive s)
-  true
+  ;-> true
 #+end_src
 *** Using the Java socket API and the protocol implementation to communicate with Redis
 #+begin_src clojure
@@ -109,8 +143,10 @@
 #+begin_src clojure
   (defn request
     [query]
-    (with-open [socket (doto (socket))
-                in (DataInputStream. (BufferedInputStream. (.getInputStream socket)))
+    (with-open [socket (socket)
+                in (DataInputStream.
+                    (BufferedInputStream.
+                     (.getInputStream socket)))
                 out (.getOutputStream socket)]
       (.write out (.getBytes (apply str query)))
       (println in)))
@@ -118,7 +154,7 @@
 
 #+begin_src clojure
   user> (request (command "set" "foo" "bar"))
-  #<DataInputStream java.io.DataInputStream@580a00fd>
+  ;-> #<DataInputStream java.io.DataInputStream@580a00fd>
 #+end_src
 
 #+begin_src sh
@@ -196,9 +232,10 @@
 
 #+begin_src clojure
   user> (request (command "set" "foo" "bar"))
-  "OK"
+  ;-> "OK"
+  
   user> (request (command "get" "foo"))
-  "bar"
+  ;-> "bar"
 #+end_src
 *** Validating our assumptions with a few more tests
 #+begin_src clojure
@@ -213,6 +250,14 @@
     (testing "DEL"
       (is (= 1 (request (command "del" "connections"))))))
 #+end_src
+
+#+begin_src fundamental
+  Testing yow.core-test
+  
+  Ran 2 tests containing 5 assertions.
+  0 failures, 0 errors.
+#+end_src
+
 ** A mountain to climb
 *** Exploring the Redis commands
 #+begin_src clojure
@@ -290,7 +335,9 @@
 
 #+begin_src clojure
   user> (macroexpand-1 '(unless false (println "Will print") (println "Will not print")))
-  ;-> (if (clojure.core/not false) (println "Will print") (println "Will not print"))
+  ;; (if (clojure.core/not false)
+  ;;   (println "Will print")
+  ;;   (println "Will not print"))
 #+end_src
 *** Defining a language for describing command functions
 #+begin_src clojure
@@ -317,9 +364,16 @@
 
 #+begin_src clojure
   user> (macroexpand-1 '(defcommand set [key value]))
-  ;-> (clojure.core/defn set [key value] (clojure.core/apply yow.core/command "set" key value nil))
+  ;; (clojure.core/defn set
+  ;;   [key value]
+  ;;   (clojure.core/apply
+  ;;    yow.core/command "set" key value nil))
+  
   user> (macroexpand-1 '(defcommand del [key & keys]))
-  ;-> (clojure.core/defn del [key & keys] (clojure.core/apply yow.core/command "del" key keys))
+  ;; (clojure.core/defn del
+  ;;   [key & keys]
+  ;;   (clojure.core/apply
+  ;;    yow.core/command "del" key keys))
 #+end_src
 
 #+begin_src clojure
@@ -327,11 +381,13 @@
     [& queries]
     `(do ~@(map (fn [q] `(defquery ~@q)) queries)))
   
-  user> (macroexpand '(defcommands (set [set value]) (del [key & keys])))
+  user> (macroexpand-1
+         '(defcommands (set [set value]) (del [key & keys])))
   ;; (do
   ;;   (yow.core/defcommand set [set value])
   ;;   (yow.core/defcommand del [key & keys]))
-  user> (clojure.walk/macroexpand-all '(defcommands (set [set value]) (del [key & keys])))
+  user> (clojure.walk/macroexpand-all
+         '(defcommands (set [set value]) (del [key & keys])))
   ;; (do
   ;;   (def set
   ;;     (fn* ([set value]
