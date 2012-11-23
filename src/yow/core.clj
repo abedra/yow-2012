@@ -23,10 +23,45 @@
     (.setTcpNoDelay true)
     (.setKeepAlive true)))
 
+(defmulti response
+  (fn [in] (char (.readByte in))))
+
+(defmethod response \- [in]
+  (.readLine in))
+
+(defmethod response \+ [in]
+  (.readLine in))
+
+(defmethod response \: [in]
+  (Long/parseLong (.readLine in)))
+
+(defmethod response \$ [in]
+  (.readLine in)
+  (.readLine in))
+
+(defmethod response \* [in]
+  (throw (UnsupportedOperationException. "Not Yet Implemented")))
+
 (defn request
   [query]
   (with-open [socket (socket)
               in (DataInputStream. (BufferedInputStream. (.getInputStream socket)))
               out (.getOutputStream socket)]
     (.write out (.getBytes (apply str query)))
-    (println in)))
+    (response in)))
+
+(defn parameters
+  [params]
+  (let [[args varargs] (split-with #(not= '& %)  params)]
+    (conj (vec args) (last varargs))))
+
+(defmacro defcommand
+  [name params]
+  (let [com (str name)
+        p (parameters params)]
+    `(defn ~name ~params
+       (apply command ~com ~@p))))
+
+(defmacro defcommands
+  [& commands]
+  `(do ~@(map (fn [q] `(defcommand ~@q)) commands)))

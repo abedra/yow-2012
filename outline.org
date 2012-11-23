@@ -119,29 +119,233 @@
 #+begin_src clojure
   user> (request (command "set" "foo" "bar"))
   #<DataInputStream java.io.DataInputStream@580a00fd>
-  
-  user> (request (command "get" "foo"))
-  #<DataInputStream java.io.DataInputStream@488e753c>
+#+end_src
+
+#+begin_src sh
+  $ bin/redis-cli get foo
+  "bar"
 #+end_src
 ** Speaking the same language
 *** We can write to Redis, but we aren't able to understand the response yet
-*** Polymorphism in Clojure
+*** Runtime Polymorphism in Clojure
+**** 3 Levels of Support
+***** Most of the core datastructures are implemented using Java interfaces
+***** Supports generation of interfaces via proxy
+***** Multimethods (arbitrary dispatch)
 *** An introduction to multimethods
+#+begin_src clojure
+  (defmulti encounter
+    (fn [x y]
+      [(:Species x) (:Species y)]))
+  
+  (defmethod encounter [:Bunny :Lion] [b l]  :run-away)
+  (defmethod encounter [:Lion :Bunny] [b l]  :eat)
+  (defmethod encounter [:Lion :Lion] [b l]   :fight)
+  (defmethod encounter [:Bunny :Bunny] [b l] :mate)
+#+end_src
+
+#+begin_src clojure
+  (def b1 {:Species :Bunny :other :stuff})
+  (def b2 {:Species :Bunny :other :stuff})
+  (def l1 {:Species :Lion :other :stuff})
+  (def l2 {:Species :Lion :other :stuff})
+  
+  (encounter b1 b2)
+  ;-> :mate
+  (encounter b1 l1)
+  ;-> :run-away
+  (encounter l1 b1)
+  ;-> :eat
+  (encounter l1 l2)
+  ;-> :fight
+#+end_src
 *** Reading the response
+**** The Rules
+#+begin_src fundamental
+  Redis will reply to commands with different kinds of replies. It is
+  possible to check the kind of reply from the first byte sent by the
+  server:
+  
+  With a single line reply the first byte of the reply will be "+"
+  With an error message the first byte of the reply will be    "-"
+  With an integer number the first byte of the reply will be   ":"
+  With bulk reply the first byte of the reply will be          "$"
+  With multi-bulk reply the first byte of the reply will be    "*"
+#+end_src
+**** Defining our response multimethod
+#+begin_src clojure
+  (defmulti response
+    (fn [in] (char (.readByte in))))
+  
+  (defmethod response \- [in]
+    (.readLine in))
+  
+  (defmethod response \+ [in]
+    (.readLine in))
+  
+  (defmethod response \: [in]
+    (Long/parseLong (.readLine in)))
+  
+  (defmethod response \$ [in]
+    (.readLine in)
+    (.readLine in))
+  
+  (defmethod response \* [in]
+    (throw (UnsupportedOperationException. "Not Yet Implemented")))
+#+end_src
+
+#+begin_src clojure
+  user> (request (command "set" "foo" "bar"))
+  "OK"
+  user> (request (command "get" "foo"))
+  "bar"
+#+end_src
 *** Validating our assumptions with a few more tests
+#+begin_src clojure
+  ;; Examples taken from http://try.redis-db.com/
+  (deftest test-basic-interaction
+    (testing "SET then GET"
+      (is (= "OK" (request (command "set" "server:name" "fido"))))
+      (is (= "fido" (request (command "get" "server:name")))))
+    (testing "INCR"
+      (request (command "set" "connections" "10"))
+      (is (= 11 (request (command "incr" "connections")))))
+    (testing "DEL"
+      (is (= 1 (request (command "del" "connections"))))))
+#+end_src
 ** A mountain to climb
 *** Exploring the Redis commands
+#+begin_src clojure
+  (ns yow.commands
+    (:use [clojure.data.json :only (read-str)]))
+  
+  (defn fetch-redis-commands
+    []
+    (map first
+     (read-str
+      (slurp "https://raw.github.com/antirez/redis-doc/master/commands.json"))))
+#+end_src
+
+#+begin_src fundamental
+  ZREM ZREMRANGEBYRANK PUNSUBSCRIBE BRPOP BITCOUNT SET PEXPIREAT FLUSHDB
+  BGSAVE ZRANGE SLOWLOG SCARD HDEL HSETNX STRLEN CONFIG SET HEXISTS
+  SMOVE SUNIONSTORE ZINCRBY CONFIG RESETSTAT LINSERT BRPOPLPUSH ECHO
+  PSETEX LPOP SMEMBERS LPUSH ZRANK LINDEX RPOPLPUSH DECRBY
+  ZREVRANGEBYSCORE BLPOP ZADD SREM GETRANGE RENAMENX AUTH HINCRBYFLOAT
+  SINTER SDIFFSTORE LLEN MGET SUBSCRIBE ZCARD SETBIT MIGRATE INCRBY DEL
+  GETSET SETNX DEBUG OBJECT TTL RPUSH ZUNIONSTORE RPUSHX HLEN TIME LREM
+  INFO SLAVEOF HGET RESTORE LTRIM SADD BITOP WATCH PUBLISH PEXPIRE QUIT
+  SCRIPT FLUSH DECR EVALSHA HMGET LRANGE EXEC SCRIPT EXISTS INCRBYFLOAT
+  UNSUBSCRIBE BGREWRITEAOF MOVE PING EXPIREAT SRANDMEMBER LPUSHX HGETALL
+  LASTSAVE SCRIPT KILL HINCRBY CLIENT KILL CLIENT LIST INCR ZREVRANGE
+  PERSIST KEYS DUMP SETEX ZCOUNT MSET ZREVRANK LSET UNWATCH SHUTDOWN GET
+  SISMEMBER GETBIT CONFIG GET SINTERSTORE ZRANGEBYSCORE ZSCORE SDIFF
+  MULTI MONITOR HVALS DEBUG SEGFAULT PSUBSCRIBE HSET APPEND TYPE
+  SETRANGE SYNC SCRIPT LOAD EXISTS EVAL SELECT SUNION HKEYS RANDOMKEY
+  PTTL FLUSHALL HMSET SAVE DISCARD SPOP SORT ZREMRANGEBYSCORE RENAME
+  RPOP EXPIRE ZINTERSTORE MSETNX DBSIZE OBJECT
+#+end_src
 *** There are 144 commands in Redis 2.6.4
+#+begin_src clojure
+  user> (count (fetch-redis-commands))
+  ;-> 144
+#+end_src
 *** There are only a handful of ideas behind all of them
+#+begin_src javascript
+  "BITOP": {
+      "summary": "Perform bitwise operations between strings",
+      "complexity": "O(N)",
+      "arguments": [
+          {
+              "name": "operation",
+              "type": "string"
+          },
+          {
+              "name": "destkey",
+              "type": "key"
+          },
+          {
+              "name": "key",
+              "type": "key",
+              "multiple": true
+          }
+      ],
+      "since": "2.6.0",
+      "group": "string"
+  },
+#+end_src
 *** Do we write and maintain 144 functions?
-*** Hell no, we abstract!
+**** Hell no, we abstract!
 *** An introduction to macros in Clojure
+**** The first rule of macro club
+#+begin_src clojure
+  ;; source http://clojuredocs.org/clojure_core/clojure.core/defmacro
+  (defmacro unless [pred a b]
+    `(if (not ~pred) ~a ~b))
+  
+  ;; usage:
+  
+  (unless false (println "Will print") (println "Will not print"))
+#+end_src
+
+#+begin_src clojure
+  user> (macroexpand-1 '(unless false (println "Will print") (println "Will not print")))
+  ;-> (if (clojure.core/not false) (println "Will print") (println "Will not print"))
+#+end_src
 *** Defining a language for describing command functions
+#+begin_src clojure
+  (defcommands
+    (set  [key value])
+    (get  [key])
+    (incr [key])
+    (del  [key & keys]))
+#+end_src
 *** Writing the macros that pull it all together
+#+begin_src clojure
+  (defn parameters
+    [params]
+    (let [[args varargs] (split-with #(not= '& %)  params)]
+      (conj (vec args) (last varargs))))
+  
+  (defmacro defcommand
+    [name params]
+    (let [com (str name)
+          p (parameters params)]
+      `(defn ~name ~params
+         (apply command ~com ~@p))))
+#+end_src
+
+#+begin_src clojure
+  user> (macroexpand-1 '(defcommand set [key value]))
+  ;-> (clojure.core/defn set [key value] (clojure.core/apply yow.core/command "set" key value nil))
+  user> (macroexpand-1 '(defcommand del [key & keys]))
+  ;-> (clojure.core/defn del [key & keys] (clojure.core/apply yow.core/command "del" key keys))
+#+end_src
+
+#+begin_src clojure
+  (defmacro defqueries
+    [& queries]
+    `(do ~@(map (fn [q] `(defquery ~@q)) queries)))
+  
+  user> (macroexpand '(defcommands (set [set value]) (del [key & keys])))
+  ;; (do
+  ;;   (yow.core/defcommand set [set value])
+  ;;   (yow.core/defcommand del [key & keys]))
+  user> (clojure.walk/macroexpand-all '(defcommands (set [set value]) (del [key & keys])))
+  ;; (do
+  ;;   (def set
+  ;;     (fn* ([set value]
+  ;;             (clojure.core/apply yow.core/command "set" set value nil))))
+  ;;   (def del
+  ;;     (fn* ([key & keys]
+  ;;             (clojure.core/apply yow.core/command "del" key keys)))))
+#+end_src
 ** Keeping track of the commands
 *** How do we keep track of everything?
 *** Programatically extracting all of the commands
 **** https://raw.github.com/antirez/redis-doc/master/commands.json
+#+begin_src clojure
+#+end_src
 *** Writing the commands file
 *** Not all commands created equal
 ** Wrapping up
