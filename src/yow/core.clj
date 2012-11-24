@@ -1,4 +1,5 @@
 (ns yow.core
+  (:refer-clojure :exclude [set get])
   (:require [clojure.string :as str])
   (:import (java.net Socket)
            (java.io BufferedInputStream DataInputStream)))
@@ -40,14 +41,17 @@
   (.readLine in))
 
 (defmethod response \* [in]
-  (throw (UnsupportedOperationException. "Not Yet Implemented")))
+  (throw (UnsupportedOperationException.
+          "Not Yet Implemented")))
 
 (defn request
-  [query]
+  [command]
   (with-open [socket (socket)
-              in (DataInputStream. (BufferedInputStream. (.getInputStream socket)))
+              in (DataInputStream.
+                  (BufferedInputStream.
+                   (.getInputStream socket)))
               out (.getOutputStream socket)]
-    (.write out (.getBytes (apply str query)))
+    (.write out (.getBytes (apply str command)))
     (response in)))
 
 (defn parameters
@@ -65,3 +69,9 @@
 (defmacro defcommands
   [& commands]
   `(do ~@(map (fn [q] `(defcommand ~@q)) commands)))
+
+(defcommands
+  (set  [key value])
+  (get  [key])
+  (incr [key])
+  (del  [key & keys]))

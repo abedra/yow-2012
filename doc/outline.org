@@ -404,8 +404,37 @@
 #+end_src
 *** Writing the commands file
 *** Not all commands created equal
+** Finishing touches
+*** Namespace cleanup
+#+begin_src clojure
+  (ns yow.core
+    (:refer-clojure :exclude [set get])
+    (:require [clojure.string :as str])
+    (:import (java.net Socket)
+             (java.io BufferedInputStream DataInputStream)))
+#+end_src
+*** Final example usage
+#+begin_src clojure
+  ;; Prefer require over use so that you don't have to propagate the
+  ;; :refer-clojure into every namespace that pulls the library in
+  user> (require '[yow.core :as redis])
+  ;-> nil
+  user> (redis/request (redis/set "foo" "bar"))
+  ;-> "OK"
+  user> (redis/request (redis/get "foo"))
+  ;-> "bar"
+#+end_src
 ** Wrapping up
 *** Packaging and distribution
+#+begin_src clojure
+  (defproject yow "0.1.0-SNAPSHOT"
+    :description "A Redis Adapter"
+    :url "http://github.com/abedra/yow-2012"
+    :license {:name "Eclipse Public License"
+              :url "http://www.eclipse.org/legal/epl-v10.html"}
+    :dependencies [[org.clojure/clojure "1.4.0"]
+                   [org.clojure/data.json "0.2.0"]])
+#+end_src
 *** Recap on what we built
 *** Where to go from here
 *** References

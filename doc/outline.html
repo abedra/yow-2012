@@ -7,7 +7,7 @@
 <meta http-equiv="Content-Type" content="text/html;charset=iso-8859-1"/>
 <meta name="title" content="outline"/>
 <meta name="generator" content="Org-mode"/>
-<meta name="generated" content="2012-11-23 16:17:06 CST"/>
+<meta name="generated" content="2012-11-23 20:02:20 CST"/>
 <meta name="author" content="Aaron Bedra"/>
 <meta name="description" content=""/>
 <meta name="keywords" content=""/>
@@ -149,12 +149,18 @@
 <li><a href="#sec-1-6-4">1.6.4 Not all commands created equal</a></li>
 </ul>
 </li>
-<li><a href="#sec-1-7">1.7 Wrapping up</a>
+<li><a href="#sec-1-7">1.7 Finishing touches</a>
 <ul>
-<li><a href="#sec-1-7-1">1.7.1 Packaging and distribution</a></li>
-<li><a href="#sec-1-7-2">1.7.2 Recap on what we built</a></li>
-<li><a href="#sec-1-7-3">1.7.3 Where to go from here</a></li>
-<li><a href="#sec-1-7-4">1.7.4 References</a></li>
+<li><a href="#sec-1-7-1">1.7.1 Namespace cleanup</a></li>
+<li><a href="#sec-1-7-2">1.7.2 Final example usage</a></li>
+</ul>
+</li>
+<li><a href="#sec-1-8">1.8 Wrapping up</a>
+<ul>
+<li><a href="#sec-1-8-1">1.8.1 Packaging and distribution</a></li>
+<li><a href="#sec-1-8-2">1.8.2 Recap on what we built</a></li>
+<li><a href="#sec-1-8-3">1.8.3 Where to go from here</a></li>
+<li><a href="#sec-1-8-4">1.8.4 References</a></li>
 </ul>
 </li>
 </ul>
@@ -890,6 +896,21 @@ user&gt; (clojure.walk/<span style="color: #228b22;">macroexpand-all</span>
 <ul>
 <li id="sec-1-6-2-1"><a href="https://raw.github.com/antirez/redis-doc/master/commands.json">https://raw.github.com/antirez/redis-doc/master/commands.json</a><br/>
 
+
+
+<pre class="src src-clojure">#+end_src
+*** <span style="color: #483d8b;">Writing</span> the commands file
+*** <span style="color: #483d8b;">Not</span> all commands created equal
+** <span style="color: #483d8b;">Finishing</span> touches
+*** <span style="color: #483d8b;">Namespace</span> cleanup
+#+begin_src clojure
+  (<span style="color: #483d8b;">ns</span> yow.core
+    (<span style="color: #008b8b;">:refer-clojure</span> <span style="color: #008b8b;">:exclude</span> [set get])
+    (<span style="color: #008b8b;">:require</span> [clojure.string <span style="color: #008b8b;">:as</span> str])
+    (<span style="color: #008b8b;">:import</span> (java.net <span style="color: #483d8b;">Socket</span>)
+             (java.io <span style="color: #483d8b;">BufferedInputStream</span> <span style="color: #483d8b;">DataInputStream</span>)))
+</pre>
+
 </li>
 </ul>
 </div>
@@ -914,39 +935,98 @@ user&gt; (clojure.walk/<span style="color: #228b22;">macroexpand-all</span>
 </div>
 
 <div id="outline-container-1-7" class="outline-3">
-<h3 id="sec-1-7"><span class="section-number-3">1.7</span> Wrapping up</h3>
+<h3 id="sec-1-7"><span class="section-number-3">1.7</span> Finishing touches</h3>
 <div class="outline-text-3" id="text-1-7">
 
 
 </div>
 
 <div id="outline-container-1-7-1" class="outline-4">
-<h4 id="sec-1-7-1"><span class="section-number-4">1.7.1</span> Packaging and distribution</h4>
+<h4 id="sec-1-7-1"><span class="section-number-4">1.7.1</span> Namespace cleanup</h4>
 <div class="outline-text-4" id="text-1-7-1">
+
+
+
+
+<pre class="src src-clojure">(<span style="color: #483d8b;">ns</span> yow.core
+  (<span style="color: #008b8b;">:refer-clojure</span> <span style="color: #008b8b;">:exclude</span> [set get])
+  (<span style="color: #008b8b;">:require</span> [clojure.string <span style="color: #008b8b;">:as</span> str])
+  (<span style="color: #008b8b;">:import</span> (java.net <span style="color: #483d8b;">Socket</span>)
+           (java.io <span style="color: #483d8b;">BufferedInputStream</span> <span style="color: #483d8b;">DataInputStream</span>)))
+</pre>
 
 </div>
 
 </div>
 
 <div id="outline-container-1-7-2" class="outline-4">
-<h4 id="sec-1-7-2"><span class="section-number-4">1.7.2</span> Recap on what we built</h4>
+<h4 id="sec-1-7-2"><span class="section-number-4">1.7.2</span> Final example usage</h4>
 <div class="outline-text-4" id="text-1-7-2">
 
+
+
+
+<pre class="src src-clojure"><span style="color: #b22222;">;; </span><span style="color: #b22222;">Prefer require over use so that you don't have to propagate the</span>
+<span style="color: #b22222;">;; </span><span style="color: #b22222;">:refer-clojure into every namespace that pulls the library in</span>
+user&gt; (<span style="color: #a0522d;">require</span> '[yow.core <span style="color: #008b8b;">:as</span> redis])
+<span style="color: #b22222;">;</span><span style="color: #b22222;">-&gt; nil</span>
+user&gt; (redis/request (redis/set <span style="color: #8b2252;">"foo"</span> <span style="color: #8b2252;">"bar"</span>))
+<span style="color: #b22222;">;</span><span style="color: #b22222;">-&gt; "OK"</span>
+user&gt; (redis/request (redis/get <span style="color: #8b2252;">"foo"</span>))
+<span style="color: #b22222;">;</span><span style="color: #b22222;">-&gt; "bar"</span>
+</pre>
+
+</div>
 </div>
 
 </div>
 
-<div id="outline-container-1-7-3" class="outline-4">
-<h4 id="sec-1-7-3"><span class="section-number-4">1.7.3</span> Where to go from here</h4>
-<div class="outline-text-4" id="text-1-7-3">
+<div id="outline-container-1-8" class="outline-3">
+<h3 id="sec-1-8"><span class="section-number-3">1.8</span> Wrapping up</h3>
+<div class="outline-text-3" id="text-1-8">
+
+
+</div>
+
+<div id="outline-container-1-8-1" class="outline-4">
+<h4 id="sec-1-8-1"><span class="section-number-4">1.8.1</span> Packaging and distribution</h4>
+<div class="outline-text-4" id="text-1-8-1">
+
+
+
+
+<pre class="src src-clojure">(<span style="color: #a020f0;">defproject</span> <span style="color: #0000ff;">yow</span> <span style="color: #8b2252;">"0.1.0-SNAPSHOT"</span>
+  <span style="color: #008b8b;">:description</span> <span style="color: #8b2252;">"A Redis Adapter"</span>
+  <span style="color: #008b8b;">:url</span> <span style="color: #8b2252;">"http://github.com/abedra/yow-2012"</span>
+  <span style="color: #008b8b;">:license</span> {<span style="color: #008b8b;">:name</span> <span style="color: #8b2252;">"Eclipse Public License"</span>
+            <span style="color: #008b8b;">:url</span> <span style="color: #8b2252;">"http://www.eclipse.org/legal/epl-v10.html"</span>}
+  <span style="color: #008b8b;">:dependencies</span> [[org.clojure/clojure <span style="color: #8b2252;">"1.4.0"</span>]
+                 [org.clojure/data.json <span style="color: #8b2252;">"0.2.0"</span>]])
+</pre>
 
 </div>
 
 </div>
 
-<div id="outline-container-1-7-4" class="outline-4">
-<h4 id="sec-1-7-4"><span class="section-number-4">1.7.4</span> References</h4>
-<div class="outline-text-4" id="text-1-7-4">
+<div id="outline-container-1-8-2" class="outline-4">
+<h4 id="sec-1-8-2"><span class="section-number-4">1.8.2</span> Recap on what we built</h4>
+<div class="outline-text-4" id="text-1-8-2">
+
+</div>
+
+</div>
+
+<div id="outline-container-1-8-3" class="outline-4">
+<h4 id="sec-1-8-3"><span class="section-number-4">1.8.3</span> Where to go from here</h4>
+<div class="outline-text-4" id="text-1-8-3">
+
+</div>
+
+</div>
+
+<div id="outline-container-1-8-4" class="outline-4">
+<h4 id="sec-1-8-4"><span class="section-number-4">1.8.4</span> References</h4>
+<div class="outline-text-4" id="text-1-8-4">
 
 </div>
 </div>
@@ -955,7 +1035,7 @@ user&gt; (clojure.walk/<span style="color: #228b22;">macroexpand-all</span>
 </div>
 
 <div id="postamble">
-<p class="date">Date: 2012-11-23 16:17:06 CST</p>
+<p class="date">Date: 2012-11-23 20:02:20 CST</p>
 <p class="author">Author: Aaron Bedra</p>
 <p class="creator">Org version 7.8.11 with Emacs version 24</p>
 <a href="http://validator.w3.org/check?uri=referer">Validate XHTML 1.0</a>
