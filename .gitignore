@@ -3,3 +3,4 @@ config
 vendor
 target
 dump.rdb
+.lein-failures
