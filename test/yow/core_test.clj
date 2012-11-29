@@ -1,4 +1,5 @@
 (ns yow.core-test
+  (:refer-clojure :exclude [set get])
   (:use clojure.test
         yow.core))
 

@@ -1,22 +1,22 @@
 (ns yow.core
   (:refer-clojure :exclude [set get])
+  (:use [clojure.data.json :only (read-str)])
   (:require [clojure.string :as str])
   (:import (java.net Socket)
            (java.io BufferedInputStream DataInputStream)))
-
-(def crlf "\r\n")
 
 (defn command
   "Constructs a complete command string to send to Redis.
    Conforms to the Redis unified protocol"
   [name & args]
-  (str "*"
-       (inc (count args)) crlf
-       "$" (count name) crlf
-       (str/upper-case name) crlf
-       (str/join crlf
-                 (map (fn [x] (str "$" (count x) crlf x)) args))
-       crlf))
+  (let [crlf "\r\n"]
+    (str "*"
+         (inc (count args)) crlf
+         "$" (count name) crlf
+         (str/upper-case name) crlf
+         (str/join crlf
+           (map (fn [x] (str "$" (count x) crlf x)) args))
+         crlf)))
 
 (defn- socket
   []
@@ -75,3 +75,20 @@
   (get  [key])
   (incr [key])
   (del  [key & keys]))
+
+(defmacro define-command [command]
+  (let [command (eval command)
+        name (.toLowerCase (first command))
+        data (second command)
+        docstring (str (data "summary") "\n" "Complexity: " (data "complexity"))
+        arguments (vec (map symbol (map #(% "name") (data "arguments"))))
+        varargs? (some #(= % "multiple") (flatten (map keys (data "arguments"))))
+        since (data "since")
+        group (data "group")]
+    `(defn ~(symbol name) ~docstring ~arguments
+       (apply command ~name ~arguments))))
+
+(defn fetch-redis-commands
+  []
+  (read-str
+   (slurp "https://raw.github.com/antirez/redis-doc/master/commands.json")))
