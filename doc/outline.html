@@ -7,7 +7,7 @@
 <meta http-equiv="Content-Type" content="text/html;charset=iso-8859-1"/>
 <meta name="title" content="outline"/>
 <meta name="generator" content="Org-mode"/>
-<meta name="generated" content="2012-11-23 20:02:20 CST"/>
+<meta name="generated" content="2012-11-30 09:16:36 EST"/>
 <meta name="author" content="Aaron Bedra"/>
 <meta name="description" content=""/>
 <meta name="keywords" content=""/>
@@ -378,17 +378,15 @@ $ chmod +x script/bootstrap
 
 
 
-<pre class="src src-clojure">(<span style="color: #a020f0;">def</span> <span style="color: #0000ff;">crlf</span> <span style="color: #8b2252;">"\r\n"</span>)
-
-(<span style="color: #a020f0;">defn</span> <span style="color: #0000ff;">command</span>
+<pre class="src src-clojure">(<span style="color: #a020f0;">defn</span> <span style="color: #0000ff;">command</span>
   [name &amp; args]
-  (<span style="color: #a0522d;">str</span> <span style="color: #8b2252;">"*"</span>
-       (<span style="color: #a0522d;">inc</span> (<span style="color: #a0522d;">count</span> args)) crlf
-       <span style="color: #8b2252;">"$"</span> (<span style="color: #a0522d;">count</span> name) crlf
-       (str/upper-case name) crlf
-       (str/<span style="color: #228b22;">join</span> crlf
-                 (<span style="color: #a0522d;">map</span> (<span style="color: #a020f0;">fn</span> [x] (<span style="color: #a0522d;">str</span> <span style="color: #8b2252;">"$"</span> (<span style="color: #a0522d;">count</span> x) crlf x)) args))
-       crlf))
+  (<span style="color: #483d8b;">let</span> [crlf <span style="color: #8b2252;">"\r\n"</span>]
+    (<span style="color: #a0522d;">str</span> <span style="color: #8b2252;">"*"</span> (<span style="color: #a0522d;">inc</span> (<span style="color: #a0522d;">count</span> args)) crlf
+         <span style="color: #8b2252;">"$"</span> (<span style="color: #a0522d;">count</span> name) crlf
+         (str/upper-case name) crlf
+         (str/<span style="color: #228b22;">join</span> crlf
+           (<span style="color: #a0522d;">map</span> (<span style="color: #a020f0;">fn</span> [x] (<span style="color: #a0522d;">str</span> <span style="color: #8b2252;">"$"</span> (<span style="color: #a0522d;">count</span> x) crlf x)) args))
+         crlf)))
 </pre>
 
 
@@ -1020,6 +1018,66 @@ user&gt; (redis/request (redis/get <span style="color: #8b2252;">"foo"</span>))
 <h4 id="sec-1-8-3"><span class="section-number-4">1.8.3</span> Where to go from here</h4>
 <div class="outline-text-4" id="text-1-8-3">
 
+
+
+
+<pre class="src src-clojure">(<span style="color: #a020f0;">defn</span> <span style="color: #0000ff;">fetch-redis-commands</span>
+  []
+  (read-str
+   (<span style="color: #a0522d;">slurp</span> <span style="color: #8b2252;">"https://raw.github.com/antirez/redis-doc/master/commands.json"</span>)))
+</pre>
+
+
+
+<pre class="src src-clojure">user&gt; (<span style="color: #a020f0;">def</span> <span style="color: #0000ff;">com-list</span> (fetch-redis-commands))
+<span style="color: #b22222;">;</span><span style="color: #b22222;">-&gt; #'user/com-list</span>
+user&gt; (pprint (<span style="color: #a0522d;">first</span> com-list))
+<span style="color: #b22222;">;; </span><span style="color: #b22222;">["ZREM"</span>
+<span style="color: #b22222;">;;  </span><span style="color: #b22222;">{"summary" "Remove one or more members from a sorted set",</span>
+<span style="color: #b22222;">;;   </span><span style="color: #b22222;">"complexity"</span>
+<span style="color: #b22222;">;;   </span><span style="color: #b22222;">"O(M*log(N)) with N being the number of elements in the sorted set and M the number of elements to be removed.",</span>
+<span style="color: #b22222;">;;   </span><span style="color: #b22222;">"arguments"</span>
+<span style="color: #b22222;">;;   </span><span style="color: #b22222;">[{"name" "key", "type" "key"}</span>
+<span style="color: #b22222;">;;    </span><span style="color: #b22222;">{"name" "member", "type" "string", "multiple" true}],</span>
+<span style="color: #b22222;">;;   </span><span style="color: #b22222;">"since" "1.2.0",</span>
+<span style="color: #b22222;">;;   </span><span style="color: #b22222;">"group" "sorted_set"}]</span>
+</pre>
+
+
+
+<pre class="src src-clojure">(<span style="color: #a020f0;">defmacro</span> <span style="color: #0000ff;">define-command</span> [command]
+  (<span style="color: #483d8b;">let</span> [command (<span style="color: #a0522d;">eval</span> command)
+        name (<span style="color: #483d8b;">.toLowerCase</span> (<span style="color: #a0522d;">first</span> command))
+        data (<span style="color: #a0522d;">second</span> command)
+        docstring (<span style="color: #a0522d;">str</span> (data <span style="color: #8b2252;">"summary"</span>) <span style="color: #8b2252;">"\n"</span> <span style="color: #8b2252;">"Complexity: "</span> (data <span style="color: #8b2252;">"complexity"</span>))
+        arguments (<span style="color: #a0522d;">vec</span> (<span style="color: #a0522d;">map</span> symbol (<span style="color: #a0522d;">map</span> #(% <span style="color: #8b2252;">"name"</span>) (data <span style="color: #8b2252;">"arguments"</span>))))
+        varargs? (<span style="color: #a0522d;">some</span> #(<span style="color: #a0522d;">=</span> % <span style="color: #8b2252;">"multiple"</span>) (<span style="color: #a0522d;">flatten</span> (<span style="color: #a0522d;">map</span> keys (data <span style="color: #8b2252;">"arguments"</span>))))
+        since (data <span style="color: #8b2252;">"since"</span>)
+        group (data <span style="color: #8b2252;">"group"</span>)]
+    `(<span style="color: #a020f0;">defn</span> <span style="color: #0000ff;">~</span>(<span style="color: #a0522d;">symbol</span> name) ~docstring ~arguments
+       (<span style="color: #a0522d;">apply</span> command ~name ~arguments))))
+</pre>
+
+
+
+<pre class="src src-clojure">user&gt; #'zrem
+<span style="color: #b22222;">;; </span><span style="color: #b22222;">CompilerException java.lang.RuntimeException: Unable to resolve var: zrem in this context, compiling:(NO_SOURCE_PATH:1) </span>
+user&gt; (define-command (<span style="color: #a0522d;">first</span> com-list))
+<span style="color: #b22222;">;</span><span style="color: #b22222;">-&gt; #'user/zrem</span>
+user&gt; #'zrem
+<span style="color: #b22222;">;</span><span style="color: #b22222;">-&gt; #'user/zrem</span>
+user&gt; (<span style="color: #a0522d;">doc</span> zrem)
+<span style="color: #b22222;">;; </span><span style="color: #b22222;">-------------------------</span>
+<span style="color: #b22222;">;; </span><span style="color: #b22222;">user/zrem</span>
+<span style="color: #b22222;">;; </span><span style="color: #b22222;">([key member])</span>
+<span style="color: #b22222;">;;   </span><span style="color: #b22222;">Remove one or more members from a sorted set</span>
+<span style="color: #b22222;">;; </span><span style="color: #b22222;">Complexity: O(M*log(N)) with N being the number of elements in the sorted set and M the number of elements to be removed.</span>
+user&gt; (zrem <span style="color: #8b2252;">"foo"</span> <span style="color: #8b2252;">"bar"</span>)
+<span style="color: #b22222;">;</span><span style="color: #b22222;">-&gt; "*3\r\n$4\r\nZREM\r\n$3\r\nfoo\r\n$3\r\nbar\r\n"</span>
+</pre>
+
+
+
 </div>
 
 </div>
@@ -1035,7 +1093,7 @@ user&gt; (redis/request (redis/get <span style="color: #8b2252;">"foo"</span>))
 </div>
 
 <div id="postamble">
-<p class="date">Date: 2012-11-23 20:02:20 CST</p>
+<p class="date">Date: 2012-11-30 09:16:36 EST</p>
 <p class="author">Author: Aaron Bedra</p>
 <p class="creator">Org version 7.8.11 with Emacs version 24</p>
 <a href="http://validator.w3.org/check?uri=referer">Validate XHTML 1.0</a>

@@ -96,17 +96,15 @@
 #+end_src
 *** Implementation
 #+begin_src clojure
-  (def crlf "\r\n")
-  
   (defn command
     [name & args]
-    (str "*"
-         (inc (count args)) crlf
-         "$" (count name) crlf
-         (str/upper-case name) crlf
-         (str/join crlf
-                   (map (fn [x] (str "$" (count x) crlf x)) args))
-         crlf))
+    (let [crlf "\r\n"]
+      (str "*" (inc (count args)) crlf
+           "$" (count name) crlf
+           (str/upper-case name) crlf
+           (str/join crlf
+             (map (fn [x] (str "$" (count x) crlf x)) args))
+           crlf)))
 #+end_src
 
 #+begin_src fundamental
@@ -437,4 +435,58 @@
 #+end_src
 *** Recap on what we built
 *** Where to go from here
+#+begin_src clojure
+  (defn fetch-redis-commands
+    []
+    (read-str
+     (slurp "https://raw.github.com/antirez/redis-doc/master/commands.json")))
+#+end_src
+
+#+begin_src clojure
+  user> (def com-list (fetch-redis-commands))
+  ;-> #'user/com-list
+  user> (pprint (first com-list))
+  ;; ["ZREM"
+  ;;  {"summary" "Remove one or more members from a sorted set",
+  ;;   "complexity"
+  ;;   "O(M*log(N)) with N being the number of elements in the sorted set and M the number of elements to be removed.",
+  ;;   "arguments"
+  ;;   [{"name" "key", "type" "key"}
+  ;;    {"name" "member", "type" "string", "multiple" true}],
+  ;;   "since" "1.2.0",
+  ;;   "group" "sorted_set"}]
+#+end_src
+
+#+begin_src clojure
+  (defmacro define-command [command]
+    (let [command (eval command)
+          name (.toLowerCase (first command))
+          data (second command)
+          docstring (str (data "summary") "\n" "Complexity: " (data "complexity"))
+          arguments (vec (map symbol (map #(% "name") (data "arguments"))))
+          varargs? (some #(= % "multiple") (flatten (map keys (data "arguments"))))
+          since (data "since")
+          group (data "group")]
+      `(defn ~(symbol name) ~docstring ~arguments
+         (apply command ~name ~arguments))))
+#+end_src
+
+#+begin_src clojure
+  user> #'zrem
+  ;; CompilerException java.lang.RuntimeException: Unable to resolve var: zrem in this context, compiling:(NO_SOURCE_PATH:1) 
+  user> (define-command (first com-list))
+  ;-> #'user/zrem
+  user> #'zrem
+  ;-> #'user/zrem
+  user> (doc zrem)
+  ;; -------------------------
+  ;; user/zrem
+  ;; ([key member])
+  ;;   Remove one or more members from a sorted set
+  ;; Complexity: O(M*log(N)) with N being the number of elements in the sorted set and M the number of elements to be removed.
+  user> (zrem "foo" "bar")
+  ;-> "*3\r\n$4\r\nZREM\r\n$3\r\nfoo\r\n$3\r\nbar\r\n"
+#+end_src
+
+
 *** References
